@@ -1,0 +1,16 @@
+version: '3'
+services:
+  trusted:
+    build: .
+    ports:
+      - "4000:80"
+    ipc:
+      "shareable"
+    volumes:
+      - tmp:/tmp
+  untrusted:
+    build: ../Untrusted
+    volumes:
+      - tmp:/tmp
+volumes:
+  tmp:
