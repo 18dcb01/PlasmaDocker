@@ -26,16 +26,23 @@ if __name__ == "__main__":
             [data] = client.get_buffers([makeID("dataset id"+str(id_))])
 
             client.put(1,makeID("loaded id " + str(id_)))
-
             buffer_ = pyarrow.BufferReader(data)
             reader = pyarrow.RecordBatchStreamReader(buffer_)
-            record_batch = reader.read_next_batch()
+            record_batch = []
 
-            client._release(makeID("dataset id"+str(id_)))
+            for i in range(10):
+                record_batch.append(reader.read_next_batch())
 
-            pandas_ = record_batch.to_pandas()#convert to pandas
+
+
+            pandas_ = record_batch[0].to_pandas()#convert to pandas
 
             exec(client.get(makeID("executable" + str(id_))))#execute
+
+            record_batch = []
+            reader = 0
+            buffer_ = 0
+            data = 0
 
             newBatch = pyarrow.RecordBatch.from_pandas(pandas_)#convert back
 
