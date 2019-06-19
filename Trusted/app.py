@@ -13,21 +13,23 @@ redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
 app = Flask(__name__)
 
+def makeID(id_):
+    return plasma.ObjectID(id_.encode("utf8"))
+
 @app.route("/")
 def hello():
     client = plasma.connect("/tmp/plasma")
 
     id_ = 1000000000
-    while client.contains(plasma.ObjectID("claims on "+str(id_))):
+    while client.contains(makeID("loaded id "+str(id_))):
         id_ += 1
-    id_ -= 1 #Remove after implementing post-grab claims
 
     from pyarrow import csv
     fn = "mimic.csv"
     table = csv.read_csv(fn)
     batches = table.to_batches()
 
-    strId = plasma.ObjectID("dataset id"+str(id_))
+    strId = makeID("dataset id"+str(id_))
 
     mock_sink = pyarrow.MockOutputStream()#find data size
     stream_writer = pyarrow.RecordBatchStreamWriter(mock_sink, batches[0].schema)
@@ -48,10 +50,10 @@ def hello():
 
     code = "pandas_.iat[4,3] = 32048238"
 
-    client.put(code, plasma.ObjectID("executable"+str(id_)))
+    client.put(code, makeID("executable"+str(id_)))
 
 
-    [data] = client.get_buffers([plasma.ObjectID("returnable"+str(id_))])
+    [data] = client.get_buffers([makeID("returnable"+str(id_))])
 
     buffer_ = pyarrow.BufferReader(data)
     reader = pyarrow.RecordBatchStreamReader(buffer_)

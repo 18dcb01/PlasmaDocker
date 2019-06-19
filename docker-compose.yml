@@ -12,5 +12,7 @@ services:
     build: ./Untrusted
     volumes:
       - tmp:/tmp
+    cap_drop:
+      - ALL
 volumes:
   tmp:
