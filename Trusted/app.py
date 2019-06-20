@@ -48,7 +48,14 @@ def hello():
 
     client.seal(strId)
 
-    code = "pandas_.iat[4,3] = 32048238"
+    code = """
+maxV = max(dataTable.column("age").to_pylist())
+newData = []
+for i in dataTable.column("age").data:
+    newData.append(1 if i==maxV else 0)
+newColumn = dataTable.column(3).from_array("oldest",[newData])
+dataTable = dataTable.append_column(newColumn) 
+    """
 
     client.put(code, makeID("executable"+str(id_)))
 
@@ -57,9 +64,9 @@ def hello():
 
     buffer_ = pyarrow.BufferReader(data)
     reader = pyarrow.RecordBatchStreamReader(buffer_)
-    record_batch = reader.read_next_batch()
+    datatable= reader.read_all()
 
-    html = str(record_batch.to_pandas().mean())
+    html = str(datatable.to_pandas().mean())
 
     return html
 
@@ -69,7 +76,7 @@ if __name__ == "__main__":
 
     if not newpid:#one path runs the plasma stores
         import subprocess
-        subprocess.call(["plasma_store", "-m", "30000000", "-s", "/tmp/plasma"])
+        subprocess.call(["plasma_store", "-m", "60000000", "-s", "/tmp/plasma"])
 
     else:
         app.run(host='0.0.0.0', port=80)
