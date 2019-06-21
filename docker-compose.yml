@@ -1,4 +1,4 @@
-version: '3'
+version: '3.2'
 services:
   trusted:
     build: ./Trusted
@@ -7,11 +7,15 @@ services:
     ipc:
       "shareable"
     volumes:
-      - tmp:/tmp
+      - type: "tmpf"
+        target: tmp:/tmp
   untrusted:
     build: ./Untrusted
+    deploy:
+      replicas: 5
     volumes:
-      - tmp:/tmp
+      - type: "tmpf"
+        target: tmp:/tmp
     cap_drop:
       - ALL
 volumes:

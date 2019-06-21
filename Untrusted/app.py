@@ -16,11 +16,13 @@ def makeID(id_):
     return plasma.ObjectID(id_.encode("utf8"))
 
 if __name__ == "__main__":
-    client = plasma.connect("/tmp/plasma")
     id_ = 1000000000
+    print("yello")
     keep = []
     while True:
+        client = plasma.connect("/tmp/plasma")
         if not client.contains(makeID("claims on " + str(id_))):
+
             client.put(1,makeID("claims on " + str(id_)))
             keep.append(client.get_buffers([makeID("claims on "+str(id_))]))
 
@@ -34,12 +36,9 @@ if __name__ == "__main__":
             reader = pyarrow.RecordBatchStreamReader(buffer_)
 
             dataTable = reader.read_all()
+
             #dataTable = dataTable.from_pandas(dataTable.to_pandas())
             exec(client.get(makeID("executable" + str(id_))))#execute
-
-            reader = 0
-            buffer_ = 0
-            data = 0
             
             batches = dataTable.to_batches()
 
@@ -56,7 +55,8 @@ if __name__ == "__main__":
 
             stream = pyarrow.FixedSizeBufferWriter(buf)
             stream_writer = pyarrow.RecordBatchStreamWriter(stream, batches[0].schema)
-            for batch in batches:
+            for i, batch in enumerate(batches):
+                print("U < Writing batch " + str(i+1) + "/" + str(len(batches)))
                 stream_writer.write_batch(batch)
             stream_writer.close()
 
@@ -83,3 +83,4 @@ if __name__ == "__main__":
 
         else:
             id_+=1
+        client.disconnect()

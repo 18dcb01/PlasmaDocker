@@ -37,7 +37,7 @@ def hello():
         stream_writer.write_batch(batch)
     stream_writer.close()
     data_size = mock_sink.size()
-
+    print(id_)
     buf = client.create(strId, data_size)
 
     stream = pyarrow.FixedSizeBufferWriter(buf)
@@ -66,8 +66,11 @@ dataTable = dataTable.append_column(newColumn)
     reader = pyarrow.RecordBatchStreamReader(buffer_)
     datatable= reader.read_all()
 
-    html = str(datatable.to_pandas().mean())
-
+    html = ""
+    for i in datatable.schema.names:
+        html += i
+        html += ", "
+    html = html[:-2]
     return html
 
 
@@ -77,6 +80,8 @@ if __name__ == "__main__":
     if not newpid:#one path runs the plasma stores
         import subprocess
         subprocess.call(["plasma_store", "-m", "60000000", "-s", "/tmp/plasma"])
+        print("?")
 
     else:
         app.run(host='0.0.0.0', port=80)
+        #hello()
