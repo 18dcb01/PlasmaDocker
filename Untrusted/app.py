@@ -29,17 +29,17 @@ if __name__ == "__main__":
     while True:
         client = plasma.connect("/tmp/plasma")
         if not client.contains(makeID("claims on " + str(id_))):
-            client.put(1,makeID("claims on " + str(id_)))
+            client.put(1, makeID("claims on " + str(id_)))
             keep.append(client.get_buffers([makeID("claims on "+str(id_))]))
 
             [data] = client.get_buffers([makeID("dataset id"+str(id_))])
 
-            client.put(1,makeID("loaded id " + str(id_)))
+            client.put(1, makeID("loaded id " + str(id_)))
             keep.append(client.get_buffers([makeID("loaded id "+str(id_))]))
 
-            toExecute = ['python','-c',client.get(makeID("executable" + str(id_)))]
+            toExecute = ['python', '-c', client.get(makeID("executable" + str(id_)))]
 
-            sub = subprocess.Popen(toExecute,stdin = subprocess.PIPE, stdout = subprocess.PIPE, preexec_fn=demote)
+            sub = subprocess.Popen(toExecute, stdin=subprocess.PIPE, stdout=subprocess.PIPE, preexec_fn=demote)
 
             data, _ = sub.communicate(data)
 
@@ -69,5 +69,5 @@ if __name__ == "__main__":
 
             client.seal(strId)
         else:
-            id_+=1
+            id_ += 1
         client.disconnect()

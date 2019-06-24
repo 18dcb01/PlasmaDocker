@@ -11,7 +11,7 @@ import time
 # Connect to Redis
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
-app = Flask(__name__)
+app = Flask(__name__
 
 def makeID(id_):
     return plasma.ObjectID(id_.encode("utf8"))
@@ -61,8 +61,8 @@ dataTable = reader.read_all()
 maxV = max(dataTable.column("age").to_pylist())
 newData = []
 for i in dataTable.column("age").data:
-    newData.append(1 if i==maxV else 0)
-newColumn = dataTable.column(3).from_array("oldest",[newData])
+    newData.append(1 if i == maxV else 0)
+newColumn = dataTable.column(3).from_array("oldest", [newData])
 dataTable = dataTable.append_column(newColumn)
 
 batches = dataTable.to_batches()
@@ -80,7 +80,7 @@ stream_writer.close()
 
     buffer_ = pyarrow.BufferReader(data)
     reader = pyarrow.RecordBatchStreamReader(buffer_)
-    datatable= reader.read_all()
+    datatable = reader.read_all()
 
     html = ""
     for i in datatable.schema.names:
