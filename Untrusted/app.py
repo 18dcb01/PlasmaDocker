@@ -6,23 +6,29 @@ import pandas
 import os
 import socket
 import time
+import subprocess
 
 # Connect to Redis
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
 app = Flask(__name__)
 
+
 def makeID(id_):
     return plasma.ObjectID(id_.encode("utf8"))
 
+
+def demote():
+    os.setgid(65534)
+    os.setuid(65534)
+
+
 if __name__ == "__main__":
     id_ = 1000000000
-    print("yello")
     keep = []
     while True:
         client = plasma.connect("/tmp/plasma")
         if not client.contains(makeID("claims on " + str(id_))):
-
             client.put(1,makeID("claims on " + str(id_)))
             keep.append(client.get_buffers([makeID("claims on "+str(id_))]))
 
@@ -31,20 +37,22 @@ if __name__ == "__main__":
             client.put(1,makeID("loaded id " + str(id_)))
             keep.append(client.get_buffers([makeID("loaded id "+str(id_))]))
 
+            toExecute = ['python','-c',client.get(makeID("executable" + str(id_)))]
+
+            sub = subprocess.Popen(toExecute,stdin = subprocess.PIPE, stdout = subprocess.PIPE, preexec_fn=demote)
+
+            data, _ = sub.communicate(data)
 
             buffer_ = pyarrow.BufferReader(data)
             reader = pyarrow.RecordBatchStreamReader(buffer_)
 
             dataTable = reader.read_all()
 
-            #dataTable = dataTable.from_pandas(dataTable.to_pandas())
-            exec(client.get(makeID("executable" + str(id_))))#execute
-            
             batches = dataTable.to_batches()
 
             strId = makeID("returnable"+str(id_))
 
-            mock_sink = pyarrow.MockOutputStream()#find data size
+            mock_sink = pyarrow.MockOutputStream()
             stream_writer = pyarrow.RecordBatchStreamWriter(mock_sink, batches[0].schema)
             for batch in batches:
                 stream_writer.write_batch(batch)
@@ -56,31 +64,10 @@ if __name__ == "__main__":
             stream = pyarrow.FixedSizeBufferWriter(buf)
             stream_writer = pyarrow.RecordBatchStreamWriter(stream, batches[0].schema)
             for i, batch in enumerate(batches):
-                print("U < Writing batch " + str(i+1) + "/" + str(len(batches)))
                 stream_writer.write_batch(batch)
             stream_writer.close()
 
             client.seal(strId)
-
-
-
-            # newBatch = pyarrow.RecordBatch.from_pandas(pandas_)#convert back
-            #
-            # mock_sink = pyarrow.MockOutputStream()#find data size
-            # stream_writer = pyarrow.RecordBatchStreamWriter(mock_sink, newBatch.schema)
-            # stream_writer.write_batch(newBatch)
-            # stream_writer.close()
-            # data_size = mock_sink.size()
-            #
-            # buf = client.create(makeID("returnable"+str(id_)), data_size)
-            #
-            # stream = pyarrow.FixedSizeBufferWriter(buf)
-            # stream_writer = pyarrow.RecordBatchStreamWriter(stream, newBatch.schema)
-            # stream_writer.write_batch(newBatch)
-            # stream_writer.close()
-            #
-            # client.seal(makeID("returnable"+str(id_)))
-
         else:
             id_+=1
         client.disconnect()

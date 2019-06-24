@@ -49,12 +49,28 @@ def hello():
     client.seal(strId)
 
     code = """
+import os
+import pyarrow
+import sys
+import pyarrow.plasma
+
+reader = pyarrow.RecordBatchStreamReader(sys.stdin.buffer)
+
+dataTable = reader.read_all()
+
 maxV = max(dataTable.column("age").to_pylist())
 newData = []
 for i in dataTable.column("age").data:
     newData.append(1 if i==maxV else 0)
 newColumn = dataTable.column(3).from_array("oldest",[newData])
-dataTable = dataTable.append_column(newColumn) 
+dataTable = dataTable.append_column(newColumn)
+
+batches = dataTable.to_batches()
+
+stream_writer = pyarrow.RecordBatchStreamWriter(sys.stdout.buffer, dataTable.schema)
+for batch in batches:
+    stream_writer.write_batch(batch)
+stream_writer.close()
     """
 
     client.put(code, makeID("executable"+str(id_)))

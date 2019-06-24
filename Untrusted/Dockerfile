@@ -4,6 +4,9 @@ FROM python:3.6.8-slim
 # Set the working directory to /app
 WORKDIR /app
 
+RUN useradd -r -u 1001 untrusted
+RUN awk -F: '($3 >= 1000) {printf "%s:%s\n",$1,$3}' /etc/passwd
+
 # Copy the current directory contents into the container at /app
 COPY . /app
 
