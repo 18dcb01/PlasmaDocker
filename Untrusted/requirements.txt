@@ -1,4 +1,1 @@
-Flask
-Redis
 pyarrow
-pandas

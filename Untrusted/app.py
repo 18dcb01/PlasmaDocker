@@ -1,17 +1,9 @@
-from flask import Flask
-from redis import Redis, RedisError
 import pyarrow
 import pyarrow.plasma as plasma
-import pandas
 import os
 import socket
 import time
 import subprocess
-
-# Connect to Redis
-redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
-
-app = Flask(__name__)
 
 
 def makeID(id_):

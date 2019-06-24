@@ -3,7 +3,6 @@ from redis import Redis, RedisError
 import pyarrow
 import pyarrow.plasma as plasma
 import pyarrow.parquet as pq
-import pandas
 import os
 import socket
 import time
@@ -11,7 +10,7 @@ import time
 # Connect to Redis
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
-app = Flask(__name__
+app = Flask(__name__)
 
 def makeID(id_):
     return plasma.ObjectID(id_.encode("utf8"))
@@ -37,7 +36,7 @@ def hello():
         stream_writer.write_batch(batch)
     stream_writer.close()
     data_size = mock_sink.size()
-    print(id_)
+
     buf = client.create(strId, data_size)
 
     stream = pyarrow.FixedSizeBufferWriter(buf)
@@ -82,11 +81,7 @@ stream_writer.close()
     reader = pyarrow.RecordBatchStreamReader(buffer_)
     datatable = reader.read_all()
 
-    html = ""
-    for i in datatable.schema.names:
-        html += i
-        html += ", "
-    html = html[:-2]
+    html = str(datatable)
     return html
 
 
@@ -96,7 +91,7 @@ if __name__ == "__main__":
     if not newpid:#one path runs the plasma stores
         import subprocess
         subprocess.call(["plasma_store", "-m", "60000000", "-s", "/tmp/plasma"])
-        print("?")
+        assert false #plasma store stopped?
 
     else:
         app.run(host='0.0.0.0', port=80)
