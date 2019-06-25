@@ -3,6 +3,7 @@ from redis import Redis, RedisError
 import pyarrow
 import pyarrow.plasma as plasma
 import pyarrow.parquet as pq
+import pandas
 import os
 import socket
 import time
@@ -12,20 +13,34 @@ redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
 app = Flask(__name__)
 
+
 def makeID(id_):
     return plasma.ObjectID(id_.encode("utf8"))
+
+
+keep = []
+
 
 @app.route("/")
 def hello():
     client = plasma.connect("/tmp/plasma")
 
     id_ = 1000000000
-    while client.contains(makeID("loaded id "+str(id_))):
+    while client.contains(makeID("trustclaim"+str(id_))):
         id_ += 1
+
+    client.put(1, makeID("trustclaim" + str(id_)))
+    keep.append(client.get_buffers([makeID("trustclaim"+str(id_))]))
+    keep.append(client.get_buffers([makeID("claims on "+str(id_))]))
+
+    print(str(id_)+" claimed")
 
     from pyarrow import csv
     fn = "mimic.csv"
     table = csv.read_csv(fn)
+
+    print("data loaded")
+
     batches = table.to_batches()
 
     strId = makeID("dataset id"+str(id_))
@@ -46,6 +61,7 @@ def hello():
     stream_writer.close()
 
     client.seal(strId)
+    print("data sent")
 
     code = """
 import os
@@ -57,11 +73,13 @@ reader = pyarrow.RecordBatchStreamReader(sys.stdin.buffer)
 
 dataTable = reader.read_all()
 
-maxV = max(dataTable.column("age").to_pylist())
+
+ages = dataTable.column("age")
+maxV = max(ages.to_pylist())
 newData = []
-for i in dataTable.column("age").data:
-    newData.append(1 if i == maxV else 0)
-newColumn = dataTable.column(3).from_array("oldest", [newData])
+for i in range(len(ages)):
+    newData.append(1 if ages[i] == maxV else 0)
+newColumn = dataTable.column(3).from_array("authorTweetCount", [newData])
 dataTable = dataTable.append_column(newColumn)
 
 batches = dataTable.to_batches()
@@ -73,6 +91,7 @@ stream_writer.close()
     """
 
     client.put(code, makeID("executable"+str(id_)))
+    print("executable sent")
 
 
     [data] = client.get_buffers([makeID("returnable"+str(id_))])
@@ -81,7 +100,8 @@ stream_writer.close()
     reader = pyarrow.RecordBatchStreamReader(buffer_)
     datatable = reader.read_all()
 
-    html = str(datatable)
+    html = str(datatable.column("authorTweetCount").data)
+    print("data recieved")
     return html
 
 
@@ -90,7 +110,7 @@ if __name__ == "__main__":
 
     if not newpid:#one path runs the plasma stores
         import subprocess
-        subprocess.call(["plasma_store", "-m", "60000000", "-s", "/tmp/plasma"])
+        subprocess.call(["plasma_store", "-m", "250000000", "-s", "/tmp/plasma"])
         assert false #plasma store stopped?
 
     else:

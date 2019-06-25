@@ -1,21 +1,22 @@
-version: '3.2'
+version: '3.5'
 services:
   trusted:
-    build: ./Trusted
+    build: 
+      context: ./Trusted
+      shm_size: '300 mb'
+    shm_size: '300 mb'
     ports:
       - "4000:80"
     ipc:
       "shareable"
     volumes:
-      - type: "tmpf"
-        target: tmp:/tmp
+      - tmp:/tmp
   untrusted:
     build: ./Untrusted
     deploy:
       replicas: 5
     volumes:
-      - type: "tmpf"
-        target: tmp:/tmp
+      - tmp:/tmp
     cap_drop:
       - SETPCAP
       - MKNOD

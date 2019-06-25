@@ -23,22 +23,27 @@ if __name__ == "__main__":
         if not client.contains(makeID("claims on " + str(id_))):
             client.put(1, makeID("claims on " + str(id_)))
             keep.append(client.get_buffers([makeID("claims on "+str(id_))]))
+            print(str(id_)+" claimed")
 
             [data] = client.get_buffers([makeID("dataset id"+str(id_))])
 
+            print("data recieved")
+
             client.put(1, makeID("loaded id " + str(id_)))
-            keep.append(client.get_buffers([makeID("loaded id "+str(id_))]))
+            keep=client.get_buffers([makeID("loaded id "+str(id_))])
 
             toExecute = ['python', '-c', client.get(makeID("executable" + str(id_)))]
 
             sub = subprocess.Popen(toExecute, stdin=subprocess.PIPE, stdout=subprocess.PIPE, preexec_fn=demote)
-
+            print("sending data")
             data, _ = sub.communicate(data)
+            print("process finished")
 
             buffer_ = pyarrow.BufferReader(data)
             reader = pyarrow.RecordBatchStreamReader(buffer_)
 
             dataTable = reader.read_all()
+            print("data recieved")
 
             batches = dataTable.to_batches()
 
@@ -60,6 +65,7 @@ if __name__ == "__main__":
             stream_writer.close()
 
             client.seal(strId)
+            print("data sent")
         else:
             id_ += 1
         client.disconnect()
