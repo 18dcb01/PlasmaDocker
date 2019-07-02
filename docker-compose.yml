@@ -22,6 +22,9 @@ services:
       replicas: 5
       restart_policy:
         condition: any
+      resources:
+        limits:
+          memory: 100M
     volumes:
       - tmp:/tmp
     cap_drop:

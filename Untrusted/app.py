@@ -31,6 +31,7 @@ class codeRunnerServicer(codeRunner_pb2_grpc.codeRunnerServicer):
 
     def runCode(self, request, context):
         start = time.clock()
+        print("hello")
 
         [data] = self.client.get_buffers([makeID(request.id_)])
         buffer_ = pyarrow.BufferReader(data)

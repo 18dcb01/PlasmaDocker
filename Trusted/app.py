@@ -19,11 +19,10 @@ app = Flask(__name__)
 def makeID(id_):
     return plasma.ObjectID(id_.encode("utf8"))
 
+
 def randString():
     chars = """abcdefghijklmnopqr stuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()~`-_=+[{]};:'"/?>.<,|\\"""
     return ''.join([random.choice(chars) for n in range(20)])
-
-
 
 
 @app.route("/")
@@ -31,7 +30,7 @@ def hello():
     channel = grpc.insecure_channel('untrusted:50051')
     stub = codeRunner_pb2_grpc.codeRunnerStub(channel)
 
-    rand = True
+    rand = random.choice([True,False])
 
     from pyarrow import csv
     fn = "IRAhandle_tweets_1.csv" if rand else "mimic.csv"
@@ -47,11 +46,14 @@ def hello():
     print(2)
 
     code = """
-while True:
-    i = 7
+def randString(i):
+    chars = "abcdefghijklmnopqr stuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!"
+    return ''.join([random.choice(chars) for n in range(i)])
 
-
-
+stringArray = []
+for i in range(1000000):
+    print(i)
+    stringArray.append(randString(i))
 """ if False else """
 
 import os
@@ -64,7 +66,6 @@ for i in range(len(authors)):
     newData.append(1 if i == 0 or authors[i] != authors[i-1] else newData[-1]+1)
 newColumn = dataTable.column(3).from_array("authorTweetCount", [newData])
 newTable = dataTable.append_column(newColumn)
-#print(dataTable.schema)
     """ if rand else"""
 import os
 import pyarrow
@@ -76,7 +77,7 @@ newData = []
 for i in ages:
     newData.append(1 if i == maxV else 0)
 newColumn = dataTable.column(3).from_array("oldest", [newData])
-dataTable = dataTable.append_column(newColumn)
+newTable = dataTable.append_column(newColumn)
     """
 
     tables = []
