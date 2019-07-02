@@ -1,0 +1,12 @@
+service codeRunner{
+    rpc runCode(code) returns (id_) {}
+}
+
+message code {
+    required string toRun = 1;
+    required string id_ = 2;
+}
+
+message id_{
+    required string id_ = 1;
+}

@@ -1,9 +1,13 @@
 version: '3.5'
 services:
   trusted:
+    image: dcb22/trusted
     build: 
       context: ./Trusted
       shm_size: '300 mb'
+    deploy:
+      restart_policy: 
+        condition: on-failure
     shm_size: '300 mb'
     ports:
       - "4000:80"
@@ -12,9 +16,12 @@ services:
     volumes:
       - tmp:/tmp
   untrusted:
+    image: dcb22/untrusted
     build: ./Untrusted
     deploy:
       replicas: 5
+      restart_policy:
+        condition: any
     volumes:
       - tmp:/tmp
     cap_drop:

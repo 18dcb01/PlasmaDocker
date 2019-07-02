@@ -2,3 +2,5 @@ Flask
 Redis
 pyarrow
 pandas
+grpcio
+protobuf
