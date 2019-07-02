@@ -4,7 +4,6 @@ import pyarrow
 import pyarrow.plasma as plasma
 import pyarrow.parquet as pq
 import os
-import socket
 import time
 import random
 import grpc
