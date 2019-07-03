@@ -16,5 +16,5 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 ENV NAME World
 
 # Run app.py when the container launches
-CMD ["python", "-u", "app.py"]
+CMD ["python", "-u", "main.py"]
 

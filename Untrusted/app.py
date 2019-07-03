@@ -6,6 +6,8 @@ import grpc
 import codeRunner_pb2_grpc
 import codeRunner_pb2
 import random
+import sys
+import signal
 from concurrent import futures
 
 
@@ -23,6 +25,15 @@ def randString():
     return ''.join([random.choice(chars) for n in range(20)])
 
 
+runServer = True
+
+
+def handler(signum, frame):
+    runServer = False
+    raise Exception("Timed out!")
+
+
+
 class codeRunnerServicer(codeRunner_pb2_grpc.codeRunnerServicer):
     def __init__(self):
         self.client = plasma.connect("/tmp/plasma")
@@ -31,17 +42,21 @@ class codeRunnerServicer(codeRunner_pb2_grpc.codeRunnerServicer):
 
     def runCode(self, request, context):
         start = time.clock()
-        print("hello")
+        print(-1)
+        print(0)
 
         [data] = self.client.get_buffers([makeID(request.id_)])
         buffer_ = pyarrow.BufferReader(data)
         reader = pyarrow.RecordBatchStreamReader(buffer_)
         dataTable = reader.read_all()
         
-        Vars = {'dataTable':dataTable}
-        exec(request.toRun,globals(),Vars)
+        signal.alarm(1)
 
-        dataTable = Vars.get('newTable')
+        Vars = {'dataTable':dataTable}
+        exec(request.toRun,globals(),Vars)#untrusted function
+        signal.alarm(0)
+
+        dataTable = Vars['newTable']
 
         batches = dataTable.to_batches()
 
@@ -73,11 +88,17 @@ def serve():
     codeRunnerServicer(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
+    signal.signal(signal.SIGALRM, handler)
     try:
-        while(True):
-            time.sleep(5)
+        while(runServer):
+            time.sleep(3)
     except:
+        print("server stopped")
+    finally:
         server.stop(0)
+    pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
+    for i in pids:
+        os.system("kill -9 "+i)#a terrible way to stop infinite loops
     
 if __name__ == "__main__":
     serve()

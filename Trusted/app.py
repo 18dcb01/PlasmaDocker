@@ -46,16 +46,11 @@ def hello():
     print(2)
 
     code = """
-def randString(i):
-    chars = "abcdefghijklmnopqr stuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!"
-    return ''.join([random.choice(chars) for n in range(i)])
-
-stringArray = []
-for i in range(1000000):
-    print(i)
-    stringArray.append(randString(i))
+import time
+while True:
+    print(7)
+    time.sleep(0.5)
 """ if False else """
-
 import os
 import pyarrow
 import sys
